@@ -2,10 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { routePaths } from "../../../app/router/routePaths.js";
 import { useAuth } from "../../../features/auth/model/useAuth.js";
-import { apiRequest } from "../../../shared/api/httpClient.js";
+import api from "../../../shared/api/api.js";
 import { cn } from "../../../shared/lib/utils.js";
 import { Badge } from "../../../shared/ui/badge/Badge.jsx";
-import { Button, buttonVariants } from "../../../shared/ui/button/Button.jsx";
+import { Button } from "../../../shared/ui/button/Button.jsx";
+import { buttonVariants } from "../../../shared/ui/button/buttonVariants.js";
 import {
   Card,
   CardContent,
@@ -31,12 +32,10 @@ function AdminOverviewPage() {
     setError("");
 
     try {
-      const response = await apiRequest("/admin/overview", {
-        method: "GET",
-        token: accessToken,
-      });
+      const response = await api.get("/admin/overview");
+      const payload = response.data?.data;
 
-      setOverview(response.data ?? null);
+      setOverview(payload ?? null);
     } catch (requestError) {
       setError(requestError?.message || "Unable to load admin overview.");
     } finally {
@@ -64,14 +63,20 @@ function AdminOverviewPage() {
       {isLoading ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Loading admin overview...</CardTitle>
-            <CardDescription>Syncing aggregate metrics from backend.</CardDescription>
+            <CardTitle className="text-base">
+              Loading admin overview...
+            </CardTitle>
+            <CardDescription>
+              Syncing aggregate metrics from backend.
+            </CardDescription>
           </CardHeader>
         </Card>
       ) : error ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Unable to load admin overview</CardTitle>
+            <CardTitle className="text-base">
+              Unable to load admin overview
+            </CardTitle>
             <CardDescription>{error}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -109,7 +114,9 @@ function AdminOverviewPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Proof & Assignment</CardTitle>
-              <CardDescription>Operational verification pipeline.</CardDescription>
+              <CardDescription>
+                Operational verification pipeline.
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-1 text-sm text-slate-700">
               <p>Active Assignments: {overview?.assignments?.active ?? 0}</p>

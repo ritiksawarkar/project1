@@ -1,6 +1,6 @@
 import { createContext, useEffect, useMemo, useState } from "react";
 import { loadAuthSession, saveAuthSession } from "./authStorage.js";
-import { apiRequest } from "../../../shared/api/httpClient.js";
+import api from "../../../shared/api/api.js";
 
 const AuthContext = createContext(null);
 
@@ -47,21 +47,19 @@ function AuthProvider({ children }) {
       }
 
       try {
-        const response = await apiRequest("/auth/me", {
-          method: "GET",
-          token: session.token,
-        });
+        const response = await api.get("/auth/me");
 
-        const normalizedUser = normalizeUser(response.data);
+      const payload = response.data?.data;
+      const normalizedUser = normalizeUser(payload?.user);
 
-        if (!normalizedUser) {
-          throw new Error("Invalid user payload.");
-        }
+      if (!normalizedUser) {
+        throw new Error("Invalid user payload.");
+      }
 
-        const nextSession = {
-          token: session.token,
-          user: normalizedUser,
-        };
+      const nextSession = {
+        token: session.token,
+        user: normalizedUser,
+      };
 
         if (isMounted) {
           setSession(nextSession);
@@ -90,18 +88,15 @@ function AuthProvider({ children }) {
   const value = useMemo(() => {
     const register = async (payload) => {
       try {
-        const response = await apiRequest("/auth/register", {
-          method: "POST",
-          body: {
-            name: payload?.name,
-            email: payload?.email,
-            password: payload?.password,
-          },
-        });
+       const response = await api.post("/auth/register", {
+         name: payload?.name,
+         email: payload?.email,
+         password: payload?.password,
+       });
 
         return {
           ok: true,
-          user: normalizeUser(response.data?.user),
+          user: normalizeUser(response.data?.data?.user),
         };
       } catch (error) {
         return {
@@ -111,39 +106,42 @@ function AuthProvider({ children }) {
       }
     };
 
-    const signIn = async (payload) => {
-      try {
-        const response = await apiRequest("/auth/login", {
-          method: "POST",
-          body: {
-            email: payload?.email,
-            password: payload?.password,
-          },
-        });
+   const signIn = async (payload) => {
+     try {
+       const response = await api.post("/auth/login", {
+         email: payload?.email,
+         password: payload?.password,
+       });
 
-        const normalizedUser = normalizeUser(response.data?.user);
-        const token = response.data?.token;
+       const responseData = response.data?.data;
 
-        if (!normalizedUser || typeof token !== "string" || !token) {
-          throw new Error("Invalid authentication response.");
-        }
+       if (!responseData) {
+         throw new Error("Invalid authentication response.");
+       }
 
-        const nextSession = {
-          token,
-          user: normalizedUser,
-        };
+       const normalizedUser = normalizeUser(responseData.user);
+       const token = responseData.token;
 
-        setSession(nextSession);
-        saveAuthSession(nextSession);
+       if (!normalizedUser || typeof token !== "string" || !token) {
+         throw new Error("Invalid authentication response.");
+       }
 
-        return { ok: true, user: normalizedUser };
-      } catch (error) {
-        return {
-          ok: false,
-          error: error?.message || "Login failed.",
-        };
-      }
-    };
+       const nextSession = {
+         token,
+         user: normalizedUser,
+       };
+
+       setSession(nextSession);
+       saveAuthSession(nextSession);
+
+       return { ok: true, user: normalizedUser };
+     } catch (error) {
+       return {
+         ok: false,
+         error: error?.message || "Login failed.",
+       };
+     }
+   };
 
     const signOut = () => {
       setSession(null);

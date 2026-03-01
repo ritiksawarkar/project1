@@ -4,7 +4,7 @@ import { authRoles } from "../../../features/auth/model/authRoles.js";
 import { useAuth } from "../../../features/auth/model/useAuth.js";
 import { appConfig } from "../../../shared/config/appConfig.js";
 import { Badge } from "../../../shared/ui/badge/Badge.jsx";
-import { buttonVariants } from "../../../shared/ui/button/Button.jsx";
+import { buttonVariants } from "../../../shared/ui/button/buttonVariants.js";
 import { cn } from "../../../shared/lib/utils.js";
 import { routePaths } from "../../router/routePaths.js";
 

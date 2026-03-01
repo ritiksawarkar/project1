@@ -1,10 +1,16 @@
-import { createContext, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { isValidMissionStatus } from "./missionConstants.js";
 import {
   canTransitionMissionStatus,
   getAllowedNextStatuses,
 } from "./missionAuthorization.js";
-import { apiRequest } from "../../../shared/api/httpClient.js";
+import api from "../../../shared/api/api.js";
 import { useAuth } from "../../auth/model/useAuth.js";
 
 const MissionContext = createContext(null);
@@ -53,13 +59,11 @@ function MissionProvider({ children }) {
     setError("");
 
     try {
-      const response = await apiRequest("/missions", {
-        method: "GET",
-        token: accessToken,
-      });
+      const response = await api.get("/missions");
+      const payload = response.data?.data;
 
-      const nextMissions = Array.isArray(response.data)
-        ? response.data.map((mission) => normalizeMission(mission)).filter(Boolean)
+      const nextMissions = Array.isArray(payload)
+        ? payload.map((mission) => normalizeMission(mission)).filter(Boolean)
         : [];
 
       setMissions(nextMissions);
@@ -86,19 +90,16 @@ function MissionProvider({ children }) {
       }
 
       try {
-        const response = await apiRequest("/missions", {
-          method: "POST",
-          token: accessToken,
-          body: {
-            title: payload?.title,
-            donor: payload?.donor,
-            category: payload?.category,
-            area: payload?.area,
-            priority: payload?.priority,
-          },
+        const response = await api.post("/missions", {
+          title: payload?.title,
+          donor: payload?.donor,
+          category: payload?.category,
+          area: payload?.area,
+          priority: payload?.priority,
         });
+        const responsePayload = response.data?.data;
 
-        const nextMission = normalizeMission(response.data);
+        const nextMission = normalizeMission(responsePayload);
 
         if (!nextMission) {
           return { ok: false, error: "Invalid mission response payload." };
@@ -126,7 +127,9 @@ function MissionProvider({ children }) {
         return { ok: false, error: "Authentication is required." };
       }
 
-      const currentMission = missions.find((mission) => mission.id === missionId);
+      const currentMission = missions.find(
+        (mission) => mission.id === missionId,
+      );
 
       if (currentMission) {
         const authorizationResult = canTransitionMissionStatus(
@@ -141,13 +144,12 @@ function MissionProvider({ children }) {
       }
 
       try {
-        const response = await apiRequest(`/missions/${missionId}/status`, {
-          method: "PATCH",
-          token: accessToken,
-          body: { nextStatus },
+        const response = await api.patch(`/missions/${missionId}/status`, {
+          nextStatus,
         });
+        const responsePayload = response.data?.data;
 
-        const updatedMission = normalizeMission(response.data);
+        const updatedMission = normalizeMission(responsePayload);
 
         if (!updatedMission) {
           return { ok: false, error: "Invalid mission response payload." };

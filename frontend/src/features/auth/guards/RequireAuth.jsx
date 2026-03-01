@@ -7,7 +7,11 @@ function RequireAuth({ children, redirectTo = routePaths.login }) {
   const location = useLocation();
 
   if (isInitializing) {
-    return null;
+    return (
+      <section className="space-y-4">
+        <p className="text-sm text-slate-600">Validating session...</p>
+      </section>
+    );
   }
 
   if (!isAuthenticated) {

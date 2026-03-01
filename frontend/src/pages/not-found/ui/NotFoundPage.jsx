@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { buttonVariants } from "../../../shared/ui/button/Button.jsx";
+import { buttonVariants } from "../../../shared/ui/button/buttonVariants.js";
 import { cn } from "../../../shared/lib/utils.js";
 import { routePaths } from "../../../app/router/routePaths.js";
 

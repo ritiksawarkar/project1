@@ -10,7 +10,10 @@ function getApiBaseUrl() {
 
 function buildUrl(path, query) {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  const url = new URL(`${getApiBaseUrl()}${normalizedPath}`, window.location.origin);
+  const url = new URL(
+    `${getApiBaseUrl()}${normalizedPath}`,
+    window.location.origin,
+  );
 
   if (query && typeof query === "object") {
     Object.entries(query).forEach(([key, value]) => {
@@ -66,8 +69,7 @@ export async function apiRequest(path, options = {}) {
 
   if (!response.ok) {
     const message =
-      payload?.message ||
-      `Request failed with status ${response.status}`;
+      payload?.message || `Request failed with status ${response.status}`;
     throw new ApiError(message, response.status, payload?.data ?? null);
   }
 

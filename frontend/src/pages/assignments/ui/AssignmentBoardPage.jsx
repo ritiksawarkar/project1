@@ -8,7 +8,8 @@ import {
   formatMissionStatus,
 } from "../../../features/missions/lib/missionPresentation.js";
 import { Badge } from "../../../shared/ui/badge/Badge.jsx";
-import { Button, buttonVariants } from "../../../shared/ui/button/Button.jsx";
+import { Button } from "../../../shared/ui/button/Button.jsx";
+import { buttonVariants } from "../../../shared/ui/button/buttonVariants.js";
 import {
   Card,
   CardContent,
@@ -85,7 +86,10 @@ function AssignmentBoardPage() {
   );
 
   const unassignedMissions = useMemo(
-    () => sortedMissions.filter((mission) => !assignmentByMissionId.get(mission.id)),
+    () =>
+      sortedMissions.filter(
+        (mission) => !assignmentByMissionId.get(mission.id),
+      ),
     [assignmentByMissionId, sortedMissions],
   );
 
@@ -374,8 +378,12 @@ function AssignmentBoardPage() {
                         {isAvailable ? "Available" : "Assigned"}
                       </Badge>
                     </div>
-                    <p className="mt-1 text-slate-600">Email: {volunteer.email}</p>
-                    <p className="mt-1 text-slate-600">Role: {volunteer.role}</p>
+                    <p className="mt-1 text-slate-600">
+                      Email: {volunteer.email}
+                    </p>
+                    <p className="mt-1 text-slate-600">
+                      Role: {volunteer.role}
+                    </p>
                   </div>
                 );
               })

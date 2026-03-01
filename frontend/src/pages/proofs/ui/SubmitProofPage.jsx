@@ -7,7 +7,8 @@ import { useMissions } from "../../../features/missions/model/useMissions.js";
 import { proofTypeOptions } from "../../../features/proofs/model/proofConstants.js";
 import { useProofs } from "../../../features/proofs/model/useProofs.js";
 import { Badge } from "../../../shared/ui/badge/Badge.jsx";
-import { Button, buttonVariants } from "../../../shared/ui/button/Button.jsx";
+import { Button } from "../../../shared/ui/button/Button.jsx";
+import { buttonVariants } from "../../../shared/ui/button/buttonVariants.js";
 import {
   Card,
   CardContent,

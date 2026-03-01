@@ -7,7 +7,8 @@ import { formatDateTime } from "../../../features/missions/lib/missionPresentati
 import { proofStatuses } from "../../../features/proofs/model/proofConstants.js";
 import { useProofs } from "../../../features/proofs/model/useProofs.js";
 import { Badge } from "../../../shared/ui/badge/Badge.jsx";
-import { Button, buttonVariants } from "../../../shared/ui/button/Button.jsx";
+import { Button } from "../../../shared/ui/button/Button.jsx";
+import { buttonVariants } from "../../../shared/ui/button/buttonVariants.js";
 import {
   Card,
   CardContent,

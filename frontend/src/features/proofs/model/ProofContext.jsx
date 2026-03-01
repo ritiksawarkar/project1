@@ -1,13 +1,16 @@
-import { createContext, useCallback, useEffect, useMemo, useState } from "react";
 import {
-  isValidProofStatus,
-  isValidProofType,
-} from "./proofConstants.js";
+  createContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { isValidProofStatus, isValidProofType } from "./proofConstants.js";
 import {
   canTransitionProofStatus,
   getAllowedNextProofStatuses,
 } from "./proofAuthorization.js";
-import { apiRequest } from "../../../shared/api/httpClient.js";
+import api from "../../../shared/api/api.js";
 import { useAuth } from "../../auth/model/useAuth.js";
 
 const ProofContext = createContext(null);
@@ -89,13 +92,11 @@ function ProofProvider({ children }) {
     setError("");
 
     try {
-      const response = await apiRequest("/proofs", {
-        method: "GET",
-        token: accessToken,
-      });
+      const response = await api.get("/proofs");
+      const payload = response.data?.data;
 
-      const nextProofs = Array.isArray(response.data)
-        ? response.data.map((proof) => normalizeProof(proof)).filter(Boolean)
+      const nextProofs = Array.isArray(payload)
+        ? payload.map((proof) => normalizeProof(proof)).filter(Boolean)
         : [];
 
       setProofs(nextProofs);
@@ -150,18 +151,15 @@ function ProofProvider({ children }) {
       }
 
       try {
-        const response = await apiRequest("/proofs", {
-          method: "POST",
-          token: accessToken,
-          body: {
-            missionId: normalizedMissionId,
-            assignmentId: normalizeText(assignmentId) || undefined,
-            proofType,
-            note: normalizedNote,
-          },
+        const response = await api.post("/proofs", {
+          missionId: normalizedMissionId,
+          assignmentId: normalizeText(assignmentId) || undefined,
+          proofType,
+          note: normalizedNote,
         });
+        const responsePayload = response.data?.data;
 
-        const nextProof = normalizeProof(response.data);
+        const nextProof = normalizeProof(responsePayload);
 
         if (!nextProof) {
           return { ok: false, error: "Invalid proof response payload." };
@@ -191,7 +189,9 @@ function ProofProvider({ children }) {
         return { ok: false, error: "Authentication is required." };
       }
 
-      const targetProof = proofs.find((proof) => proof.id === normalizedProofId);
+      const targetProof = proofs.find(
+        (proof) => proof.id === normalizedProofId,
+      );
 
       if (!targetProof) {
         return { ok: false, error: "Proof not found." };
@@ -208,13 +208,15 @@ function ProofProvider({ children }) {
       }
 
       try {
-        const response = await apiRequest(`/proofs/${normalizedProofId}/status`, {
-          method: "PATCH",
-          token: accessToken,
-          body: { nextStatus },
-        });
+        const response = await api.patch(
+          `/proofs/${normalizedProofId}/status`,
+          {
+            nextStatus,
+          },
+        );
+        const responsePayload = response.data?.data;
 
-        const updatedProof = normalizeProof(response.data);
+        const updatedProof = normalizeProof(responsePayload);
 
         if (!updatedProof) {
           return { ok: false, error: "Invalid proof response payload." };

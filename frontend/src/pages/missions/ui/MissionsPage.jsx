@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { routePaths } from "../../../app/router/routePaths.js";
 import { Badge } from "../../../shared/ui/badge/Badge.jsx";
 import { Button } from "../../../shared/ui/button/Button.jsx";
-import { buttonVariants } from "../../../shared/ui/button/Button.jsx";
+import { buttonVariants } from "../../../shared/ui/button/buttonVariants.js";
 import {
   Card,
   CardContent,

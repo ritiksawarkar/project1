@@ -14,7 +14,11 @@ function RequireRole({
   const location = useLocation();
 
   if (isInitializing) {
-    return null;
+    return (
+      <section className="space-y-4">
+        <p className="text-sm text-slate-600">Validating permissions...</p>
+      </section>
+    );
   }
 
   if (!isAuthenticated) {

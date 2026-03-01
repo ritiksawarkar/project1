@@ -1,4 +1,10 @@
-import { createContext, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   assignmentStatuses,
   isValidAssignmentStatus,
@@ -7,7 +13,7 @@ import {
   canTransitionAssignmentStatus,
   getAllowedNextAssignmentStatuses,
 } from "./assignmentAuthorization.js";
-import { apiRequest } from "../../../shared/api/httpClient.js";
+import api from "../../../shared/api/api.js";
 import { useAuth } from "../../auth/model/useAuth.js";
 
 const AssignmentContext = createContext(null);
@@ -37,7 +43,10 @@ function normalizeVolunteer(rawVolunteer) {
     return null;
   }
 
-  if (typeof rawVolunteer.id !== "string" || typeof rawVolunteer.name !== "string") {
+  if (
+    typeof rawVolunteer.id !== "string" ||
+    typeof rawVolunteer.name !== "string"
+  ) {
     return null;
   }
 
@@ -45,7 +54,8 @@ function normalizeVolunteer(rawVolunteer) {
     id: rawVolunteer.id,
     name: rawVolunteer.name,
     email: typeof rawVolunteer.email === "string" ? rawVolunteer.email : "",
-    role: typeof rawVolunteer.role === "string" ? rawVolunteer.role : "volunteer",
+    role:
+      typeof rawVolunteer.role === "string" ? rawVolunteer.role : "volunteer",
     isActive: rawVolunteer.isActive !== false,
   };
 }
@@ -108,24 +118,20 @@ function AssignmentProvider({ children }) {
 
     try {
       const [assignmentResponse, volunteerResponse] = await Promise.all([
-        apiRequest("/assignments", {
-          method: "GET",
-          token: accessToken,
-        }),
-        apiRequest("/assignments/volunteers", {
-          method: "GET",
-          token: accessToken,
-        }),
+        api.get("/assignments"),
+        api.get("/assignments/volunteers"),
       ]);
+      const assignmentPayload = assignmentResponse.data?.data;
+      const volunteerPayload = volunteerResponse.data?.data;
 
-      const nextAssignments = Array.isArray(assignmentResponse.data)
-        ? assignmentResponse.data
+      const nextAssignments = Array.isArray(assignmentPayload)
+        ? assignmentPayload
             .map((assignment) => normalizeAssignment(assignment))
             .filter(Boolean)
         : [];
 
-      const nextVolunteers = Array.isArray(volunteerResponse.data)
-        ? volunteerResponse.data
+      const nextVolunteers = Array.isArray(volunteerPayload)
+        ? volunteerPayload
             .map((volunteer) => normalizeVolunteer(volunteer))
             .filter(Boolean)
         : [];
@@ -159,22 +165,21 @@ function AssignmentProvider({ children }) {
     [assignments],
   );
 
-  const getAvailableVolunteersByArea = useCallback(
-    () => {
-      const activeVolunteerIds = new Set(
-        assignments
-          .filter(
-            (assignment) =>
-              assignment.status === assignmentStatuses.assigned ||
-              assignment.status === assignmentStatuses.inProgress,
-          )
-          .map((assignment) => assignment.volunteerId),
-      );
+  const getAvailableVolunteersByArea = useCallback(() => {
+    const activeVolunteerIds = new Set(
+      assignments
+        .filter(
+          (assignment) =>
+            assignment.status === assignmentStatuses.assigned ||
+            assignment.status === assignmentStatuses.inProgress,
+        )
+        .map((assignment) => assignment.volunteerId),
+    );
 
-      return volunteers.filter((volunteer) => !activeVolunteerIds.has(volunteer.id));
-    },
-    [assignments, volunteers],
-  );
+    return volunteers.filter(
+      (volunteer) => !activeVolunteerIds.has(volunteer.id),
+    );
+  }, [assignments, volunteers]);
 
   const assignVolunteerToMission = useCallback(
     async ({ missionId, volunteerId }) => {
@@ -190,22 +195,22 @@ function AssignmentProvider({ children }) {
       }
 
       try {
-        const response = await apiRequest("/assignments", {
-          method: "POST",
-          token: accessToken,
-          body: {
-            missionId: normalizedMissionId,
-            volunteerId: normalizedVolunteerId,
-          },
+        const response = await api.post("/assignments", {
+          missionId: normalizedMissionId,
+          volunteerId: normalizedVolunteerId,
         });
+        const responsePayload = response.data?.data;
 
-        const nextAssignment = normalizeAssignment(response.data);
+        const nextAssignment = normalizeAssignment(responsePayload);
 
         if (!nextAssignment) {
           return { ok: false, error: "Invalid assignment response payload." };
         }
 
-        setAssignments((currentAssignments) => [nextAssignment, ...currentAssignments]);
+        setAssignments((currentAssignments) => [
+          nextAssignment,
+          ...currentAssignments,
+        ]);
         return { ok: true, assignment: nextAssignment };
       } catch (requestError) {
         return {
@@ -251,16 +256,13 @@ function AssignmentProvider({ children }) {
       }
 
       try {
-        const response = await apiRequest(
+        const response = await api.patch(
           `/assignments/${normalizedAssignmentId}/status`,
-          {
-            method: "PATCH",
-            token: accessToken,
-            body: { nextStatus },
-          },
+          { nextStatus },
         );
+        const responsePayload = response.data?.data;
 
-        const updatedAssignment = normalizeAssignment(response.data);
+        const updatedAssignment = normalizeAssignment(responsePayload);
 
         if (!updatedAssignment) {
           return { ok: false, error: "Invalid assignment response payload." };
@@ -278,8 +280,7 @@ function AssignmentProvider({ children }) {
       } catch (requestError) {
         return {
           ok: false,
-          error:
-            requestError?.message || "Unable to update assignment status.",
+          error: requestError?.message || "Unable to update assignment status.",
         };
       }
     },

@@ -1,4 +1,5 @@
 const AUTH_STORAGE_KEY = "social-mentor-auth-v1";
+const LEGACY_AUTH_STORAGE_KEY = "auth";
 
 function isBrowserEnvironment() {
   return (
@@ -29,8 +30,7 @@ function parseAuthSession(value) {
         user: {
           id: parsed.user.id,
           name: parsed.user.name,
-          email:
-            typeof parsed.user.email === "string" ? parsed.user.email : "",
+          email: typeof parsed.user.email === "string" ? parsed.user.email : "",
           role: parsed.user.role,
           isActive: parsed.user.isActive !== false,
         },
@@ -50,7 +50,16 @@ export function loadAuthSession() {
 
   try {
     const rawSession = window.localStorage.getItem(AUTH_STORAGE_KEY);
-    return parseAuthSession(rawSession);
+    const parsedPrimarySession = parseAuthSession(rawSession);
+
+    if (parsedPrimarySession) {
+      return parsedPrimarySession;
+    }
+
+    const rawLegacySession = window.localStorage.getItem(
+      LEGACY_AUTH_STORAGE_KEY,
+    );
+    return parseAuthSession(rawLegacySession);
   } catch {
     return null;
   }
@@ -64,6 +73,7 @@ export function saveAuthSession(session) {
   if (!session) {
     try {
       window.localStorage.removeItem(AUTH_STORAGE_KEY);
+      window.localStorage.removeItem(LEGACY_AUTH_STORAGE_KEY);
     } catch {
       // Ignore storage removal failures.
     }
