@@ -46,7 +46,12 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error?.response?.status === 401) {
+    const status = error?.response?.status;
+    const requestUrl =
+      typeof error?.config?.url === "string" ? error.config.url : "";
+    const isAuthMeRequest = requestUrl.toLowerCase().includes("/auth/me");
+
+    if (status === 401 && !isAuthMeRequest) {
       clearStoredAuth();
 
       if (
